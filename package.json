@@ -76,7 +76,7 @@
   "scripts": {
     "lint": "eslint js --ext=js,vue",
     "test": "yarn lint && cross-env NODE_ENV=test && jest ./js/tests",
-    "coverage": "yarn test && codecov"
+    "coverage": "yarn test --coverage && codecov"
   },
   "repository": {
     "type": "git",

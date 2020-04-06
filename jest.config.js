@@ -19,7 +19,6 @@ module.exports = {
   },
   setupTestFrameworkScriptFile: '<rootDir>/js/tests/setup.js',
   verbose: true,
-  collectCoverage: true,
   coverageReporters: ['lcov', 'json', 'html'],
   coverageDirectory: '<rootDir>/js/tests/__coverage__',
   coveragePathIgnorePatterns: ['/node_modules/', '/tests/', '/stubs/', '/libs/']
