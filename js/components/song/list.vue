@@ -6,42 +6,7 @@
     @keydown.enter.prevent.stop="handleEnter"
     @keydown.a.prevent="handleA"
   >
-    <table class="song-list-header" :class="sortable ? 'sortable' : 'unsortable'">
-      <thead>
-        <tr>
-          <th @click="sort('song.track')" class="track-number">#
-            <i class="fa fa-angle-down" v-show="sortKey === 'song.track' && order > 0"></i>
-            <i class="fa fa-angle-up" v-show="sortKey === 'song.track' && order < 0"></i>
-          </th>
-          <th @click="sort('song.title')" class="title">Title
-            <i class="fa fa-angle-down" v-show="sortKey === 'song.title' && order > 0"></i>
-            <i class="fa fa-angle-up" v-show="sortKey === 'song.title' && order < 0"></i>
-          </th>
-          <th @click="sort(['song.album.artist.name', 'song.album.name', 'song.track'])" class="artist">Artist
-            <i class="fa fa-angle-down" v-show="sortingByArtist && order > 0"></i>
-            <i class="fa fa-angle-up" v-show="sortingByArtist && order < 0"></i>
-          </th>
-          <th @click="sort(['song.album.name', 'song.track'])" class="album">Album
-            <i class="fa fa-angle-down" v-show="sortingByAlbum && order > 0"></i>
-            <i class="fa fa-angle-up" v-show="sortingByAlbum && order < 0"></i>
-          </th>
-          <th @click="sort('song.length')" class="time">Time
-            <i class="fa fa-angle-down" v-show="sortKey === 'song.length' && order > 0"></i>
-            <i class="fa fa-angle-up" v-show="sortKey === 'song.length' && order < 0"></i>
-          </th>
-          <th class="play"></th>
-        </tr>
-      </thead>
-    </table>
-
-    <virtual-scroller
-      class="scroller"
-      content-tag="table"
-      :items="filteredItems"
-      item-height="35"
-      :renderers="renderers"
-      key-field="song.id"
-    />
+    <sortable-song-list :filtered_song_rows="songRows" :type="type" />
   </div>
 </template>
 
@@ -49,16 +14,19 @@
 import isMobile from 'ismobilejs'
 
 import { dragTypes } from '@/config'
-import { filterBy, orderBy, event, startDragging, $ } from '@/utils'
+import { filterBy, event, startDragging, $ } from '@/utils'
 import { playlistStore, queueStore, songStore, favoriteStore } from '@/stores'
 import { playback } from '@/services'
 import router from '@/router'
+import SortableSongList from "./sort/sortable-song-list.vue"
 
-const songItem = () => import('@/components/song/item')
 const VALID_SONG_LIST_TYPES = ['all-songs', 'queue', 'playlist', 'favorites', 'recently-played', 'artist', 'album']
 
 export default {
   name: 'song-list',
+  components: {
+    SortableSongList
+  },
   props: {
     items: {
       type: Array,
@@ -78,20 +46,9 @@ export default {
     }
   },
 
-  components: {
-    songItem
-  },
-
   data: () => ({
-    renderers: Object.freeze({
-      song: songItem
-    }),
     lastSelectedRow: null,
     q: '',
-    sortKey: '',
-    order: -1,
-    sortingByAlbum: false,
-    sortingByArtist: false,
     songRows: []
   }),
 
@@ -122,10 +79,6 @@ export default {
 
   methods: {
     render () {
-      if (this.sortable === false) {
-        this.sortKey = ''
-      }
-
       // Update the song count and duration status on parent.
       event.emit(event.$names.UPDATE_META, {
         songCount: this.items.length,
@@ -154,40 +107,6 @@ export default {
           type: 'song'
         }
       })
-    },
-
-    defaultSort () {
-      // there are certain cirscumstances where sorting is simply disallowed, e.g. in Queue
-      if (this.sortable === false) {
-        return
-      }
-
-      // if this is an album's song list, default to sorting by track number
-      // and additionally sort by disc number
-      if (this.type === 'album') {
-        this.sortKey = ['song.disc', 'song.track']
-      }
-      this.order = 1
-      this.songRows = orderBy(this.songRows, this.sortKey, this.order)
-    },
-
-    /**
-     * @param  {String} key The sort key. Can be 'title', 'album', 'artist', or 'length'
-     */
-    sort (key = null) {
-      // there are certain cirscumstances where sorting is simply disallowed, e.g. in Queue
-      if (this.sortable === false) {
-        return
-      }
-
-      if (key) {
-        this.sortKey = key
-        this.order *= -1
-      }
-
-      this.sortingByAlbum = this.sortKey[0] === 'song.album.name'
-      this.sortingByArtist = this.sortKey[0] === 'song.album.artist.name'
-      this.songRows = orderBy(this.songRows, this.sortKey, this.order)
     },
 
     handleDelete () {
@@ -398,7 +317,6 @@ export default {
   mounted () {
     if (this.items) {
       this.render()
-      this.defaultSort()
     }
   },
 

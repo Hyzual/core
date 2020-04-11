@@ -96,7 +96,6 @@ export default {
     async populate (playlist) {
       await playlistStore.fetchSongs(playlist)
       this.playlist = playlist
-      this.$nextTick(() => this.$refs.songList && this.$refs.songList.sort())
     }
   }
 }

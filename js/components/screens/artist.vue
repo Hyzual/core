@@ -103,8 +103,6 @@ export default {
 
     artist () {
       this.meta.showing = false
-      // #530
-      this.$refs.songList && this.$refs.songList.sort()
     }
   },
 
